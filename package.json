@@ -1,0 +1,22 @@
+{
+  "name": "jixiaozhu-cloud",
+  "version": "2.0.0",
+  "description": "技小助 - 通用技术智能助手（云端部署版）",
+  "main": "api/proxy.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod",
+    "deploy:preview": "vercel"
+  },
+  "keywords": [
+    "通用技术",
+    "智能助手",
+    "教育",
+    "AI"
+  ],
+  "author": "技小助团队",
+  "license": "MIT",
+  "devDependencies": {
+    "vercel": "^32.0.0"
+  }
+}

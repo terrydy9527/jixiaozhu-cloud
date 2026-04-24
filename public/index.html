@@ -407,8 +407,7 @@
     <script>
         // 配置 - 直接调用 Coze API（用于 HBuilder 托管）
         const CONFIG = {
-            API_URL: 'https://2v5478d2bg.coze.site/stream_run',
-            COZE_API_KEY: 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjRhODQyODA2LWQwZGYtNDlmYS05ZDAxLWNhM2MyNDJkMWUyNiJ9.eyJpc3MiOiJodHRwczovL2FwaS5jb3plLmNuIiwiYXVkIjpbImp6am1WNFNYUUNpWDdsU1B6cnFraktVVWhxU1J5eGg1Il0sImV4cCI6ODIxMDI2Njg3Njc5OSwiaWF0IjoxNzc2OTMxODMwLCJzdWIiOiJzcGlmZmU6Ly9hcGkuY296ZS5jbi93b3JrbG9hZF9pZGVudGl0eS9pZDo3NjMxNDgwNzIwMzU0OTY3NjA0Iiwic3JjIjoiaW5ib3VuZF9hdXRoX2FjY2Vzc190b2tlbl9pZDo3NjMxODY0MTAwMDExNjM4ODExIn0.DIkpUyxZ2NwU03k_avoK4vlbXoCVHd8BcToROg_XRYVmq_5Mu8VZzyqnDYs4qUz-XMe1GOcu1uTSc987XdwpGpGhC1F2QYJEEQ2smB_WmceF_zEBW7WE0ZqRkkVpnV_B2HYHtFSKD2dQf95S7B4yWJYn8YQRG20nKFOoPPfdHx0gHOXRz3Wft97c20JLD8x-XLrEqSX2S3fLUOP_4iSxve0DEyUkzimltsHwe6tEAZJZ2j4eX1JsUfAtmRi8enK5ZOVPLsO7xvxI_GTAPBwyGqiZrypBB3FOdPB5mkTPTjml1LAP_xFVAUw-lXfBufUtQ_iusjaWyp4L8KyU1a17FQ'
+            API_URL: '/api/proxy',
         };
 
         let isSending = false;
@@ -427,15 +426,14 @@
 
             try {
                 const response = await fetch(CONFIG.API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${CONFIG.COZE_API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        messages: [{ role: 'user', content: message }]
-                    })
-                });
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        messages: [{ role: 'user', content: message }]
+    })
+});
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);

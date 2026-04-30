@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技小助 - 通用技术智能助教</title>
+    <meta name="description" content="通用技术学科智能助手，提供知识问答、设计指导、实验辅助等功能">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'SimHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 80vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.error {
+            background: #f87171;
+        }
+
+        .status-dot.loading {
+            background: #facc15;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+        }
+
+        .sidebar {
+            width: 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+        }
+
+        .module-btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 12px;
+            background: #f3f4f6;
+            color: #374151;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: left;
+        }
+
+        .module-btn:hover {
+            background: #e5e7eb;
+            transform: translateX(5px);
+        }
+
+        .module-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .module-icon {
+            font-size: 24px;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f9fafb;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h2 {
+            font-size: 18px;
+            color: #1f2937;
+        }
+
+        .quick-questions {
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .quick-questions h3 {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        .quick-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .quick-btn {
+            padding: 8px 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            background: white;
+            color: #4b5563;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 15px 20px;
+            border-radius: 16px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+            background: white;
+            color: #1f2937;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .message.error {
+            align-self: flex-start;
+            background: #fee2e2;
+            color: #dc2626;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.typing {
+            display: flex;
+            gap: 5px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .input-area {
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 15px;
+            resize: none;
+            min-height: 48px;
+            max-height: 120px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e5e7eb;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            color: #6b7280;
+            font-size: 16px;
+        }
+
+        .error-toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #dc2626;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+            z-index: 1001;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 加载遮罩 -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div id="loading-text" class="loading-text">正在连接 Coze 服务...</div>
+    </div>
+
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>
+                <span>🤖</span>
+                技小助 - 通用技术智能助教
+            </h1>
+            <div class="status-badge">
+                <span id="status-dot" class="status-dot loading"></span>
+                <span id="status-text">连接中</span>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 侧边栏：功能模块 -->
+            <div class="sidebar">
+                <button class="module-btn active" data-module="knowledge">
+                    <span class="module-icon">📚</span>
+                    <div>
+                        <div style="font-weight: 600;">知识问答</div>
+                        <div style="font-size: 12px; opacity: 0.8;">知识库检索与答疑</div>
+                    </div>
+                </button>
+                <button class="module-btn" data-module="design">
+                    <span class="module-icon">🎨</span>
+                    <div>
+                        <div style="font-weight: 600;">设计指导</div>
+                        <div style="font-size: 12px; opacity: 0.8;">技术设计流程指导</div>
+                    </div>
+                </button>
+                <button class="module-btn" data-module="experiment">
+                    <span class="module-icon">🔬</span>
+                    <div>
+                        <div style="font-weight: 600;">实验助手</div>
+                        <div style="font-size: 12px; opacity: 0.8;">实验原理与数据分析</div>
+                    </div>
+                </button>
+                <button class="module-btn" data-module="project">
+                    <span class="module-icon">📋</span>
+                    <div>
+                        <div style="font-weight: 600;">项目评审</div>
+                        <div style="font-size: 12px; opacity: 0.8;">可行性评估与建议</div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- 聊天区域 -->
+            <div class="chat-area">
+                <div class="chat-header">
+                    <h2 id="module-title">📚 知识问答</h2>
+                    <button onclick="clearChat()" style="padding: 8px 16px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; cursor: pointer; font-size: 14px;">清空对话</button>
+                </div>
+
+                <!-- 快捷问题 -->
+                <div class="quick-questions">
+                    <h3>💡 快捷问题</h3>
+                    <div class="quick-btns" id="quick-btns">
+                        <!-- 由 JS 动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 消息列表 -->
+                <div class="messages" id="messages">
+                    <!-- 欢迎消息 -->
+                    <div class="message assistant">
+                        👋 你好！我是「技小助」，你的通用技术学习助手。
+
+我可以帮你：
+📚 解答通用技术知识问题
+🎨 指导技术设计流程
+🔬 辅助实验操作与数据分析
+📋 评审项目方案的可行性
+
+请选择左侧功能模块，然后开始提问吧！
+                    </div>
+                </div>
+
+                <!-- 输入区域 -->
+                <div class="input-area">
+                    <textarea 
+                        id="message-input" 
+                        class="message-input" 
+                        placeholder="输入你的问题..."
+                        rows="1"
+                        onkeydown="handleKeyDown(event)"
+                        oninput="autoResize(this)"
+                    ></textarea>
+                    <button id="send-btn" class="send-btn" onclick="sendMessage()">
+                        <span>发送</span>
+                        <span>➤</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 配置 ====================
+        const CONFIG = {
+            // Coze AI 编程 API 端点
+            apiUrl: 'https://2v5478d2bg.coze.site/stream_run',
+            // 你的 Project ID
+            projectId: '7631479453788405812',
+            // 你的 Token
+            token: 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjRhODQyODA2LWQwZGYtNDlmYS05ZDAxLWNhM2MyNDJkMWUyNiJ9.eyJpc3MiOiJodHRwczovL2FwaS5jb3plLmNuIiwiYXVkIjpbImp6am1WNFNYUUNpWDdsU1B6cnFraktVVWhxU1J5eGg1Il0sImV4cCI6ODIxMDI2Njg3Njc5OSwiaWF0IjoxNzc2OTMxODMwLCJzdWIiOiJzcGlmZmU6Ly9hcGkuY296ZS5jbi93b3JrbG9hZF9pZGVudGl0eS9pZDo3NjMxNDgwNzIwMzU0OTY3NjA0Iiwic3JjIjoiaW5ib3VuZF9hdXRoX2FjY2Vzc190b2tlbl9pZDo3NjMxODY0MTAwMDExNjM4ODExIn0.DIkpUyxZ2NwU03k_avoK4vlbXoCVHd8BcToROg_XRYVmq_5Mu8VZzyqnDYs4qUz-XMe1GOcu1uTSc987XdwpGpGhC1F2QYJEEQ2smB_WmceF_zEBW7WE0ZqRkkVpnV_B2HYHtFSKD2dQf95S7B4yWJYn8YQRG20nKFOoPPfdHx0gHOXRz3Wft97c20JLD8x-XLrEqSX2S3fLUOP_4iSxve0DEyUkzimltsHwe6tEAZJZ2j4eX1JsUfAtmRi8enK5ZOVPLsO7xvxI_GTAPBwyGqiZrypBB3FOdPB5mkTPTjml1LAP_xFVAUw-lXfBufUtQ_iusjaWyp4L8KyU1a17FQ'
+        };
+
+        // 会话 ID（每次刷新页面生成新的）
+        let sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+        // 状态变量
+        let isSending = false;
+        let currentModule = 'knowledge';
+
+        // 模块配置
+        const moduleConfig = {
+            knowledge: {
+                title: '📚 知识问答',
+                quickQuestions: [
+                    '什么是技术的创新性？',
+                    '设计的一般过程是什么？',
+                    '人机关系要考虑哪些因素？',
+                    '技术试验的方法有哪些？'
+                ]
+            },
+            design: {
+                title: '🎨 设计指导',
+                quickQuestions: [
+                    '如何进行需求分析？',
+                    '设计方案要从哪些方面考虑？',
+                    '如何优化设计方案？',
+                    '设计评价的标准是什么？'
+                ]
+            },
+            experiment: {
+                title: '🔬 实验助手',
+                quickQuestions: [
+                    '实验方案包括哪些内容？',
+                    '如何减小实验误差？',
+                    '正交试验法是什么？',
+                    '如何撰写实验报告？'
+                ]
+            },
+            project: {
+                title: '📋 项目评审',
+                quickQuestions: [
+                    '如何评估项目可行性？',
+                    '项目方案有哪些创新点？',
+                    '如何改进项目方案？',
+                    '项目实施需要注意什么？'
+                ]
+            }
+        };
+
+        // ==================== 初始化 ====================
+        window.onload = function() {
+            console.log('✓ 页面加载完成');
+            console.log('✓ Project ID:', CONFIG.projectId);
+            console.log('✓ API URL:', CONFIG.apiUrl);
+            
+            // 初始化模块
+            updateModuleUI();
+            
+            // 隐藏加载遮罩
+            setTimeout(() => {
+                hideLoading();
+                updateStatus('在线', false);
+            }, 1000);
+        };
+
+        // ==================== UI 更新函数 ====================
+        function updateLoadingText(text) {
+            const el = document.getElementById('loading-text');
+            if (el) el.textContent = text;
+        }
+
+        function hideLoading() {
+            const el = document.getElementById('loading-overlay');
+            if (el) el.style.display = 'none';
+        }
+
+        function showError(message) {
+            // 移除旧的错误提示
+            const old = document.querySelector('.error-toast');
+            if (old) old.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'error-toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function updateStatus(text, isError = false) {
+            const dot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+            
+            if (dot) {
+                dot.className = 'status-dot' + (isError ? ' error' : '');
+                if (text === '连接中') dot.className += ' loading';
+            }
+            if (statusText) statusText.textContent = text;
+        }
+
+        function updateModuleUI() {
+            const config = moduleConfig[currentModule];
+            
+            // 更新标题
+            document.getElementById('module-title').textContent = config.title;
+            
+            // 更新快捷问题
+            const quickBtns = document.getElementById('quick-btns');
+            quickBtns.innerHTML = config.quickQuestions.map(q => 
+                `<button class="quick-btn" onclick="sendQuickQuestion('${q}')">${q}</button>`
+            ).join('');
+            
+            // 更新模块按钮状态
+            document.querySelectorAll('.module-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.module === currentModule);
+            });
+        }
+
+        // ==================== 事件处理 ====================
+        document.querySelectorAll('.module-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentModule = btn.dataset.module;
+                updateModuleUI();
+            });
+        });
+
+        function handleKeyDown(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function autoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+        }
+
+        function clearChat() {
+            const messages = document.getElementById('messages');
+            messages.innerHTML = `
+                <div class="message assistant">
+                    👋 对话已清空！
+                    
+请继续提问，或者切换左侧功能模块获取不同帮助。
+                </div>
+            `;
+        }
+
+        function sendQuickQuestion(question) {
+            document.getElementById('message-input').value = question;
+            sendMessage();
+        }
+
+        // ==================== 发送消息 ====================
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+
+            if (!message || isSending) return;
+
+            input.value = '';
+            input.style.height = 'auto';
+            isSending = true;
+
+            // 更新按钮状态
+            document.getElementById('send-btn').disabled = true;
+
+            // 添加用户消息
+            addMessage(message, 'user');
+            
+            // 显示加载状态
+            showTypingIndicator();
+            updateStatus('思考中...');
+
+            try {
+                await sendToCoze(message);
+            } catch (error) {
+                console.error('发送消息失败:', error);
+                hideTypingIndicator();
+                updateStatus('连接失败', true);
+                showError(error.message);
+                addMessage(`❌ 错误：${error.message}`, 'error');
+            } finally {
+                isSending = false;
+                document.getElementById('send-btn').disabled = false;
+            }
+        }
+
+        async function sendToCoze(message) {
+            console.log('发送消息到 Coze:', message);
+            console.log('API URL:', CONFIG.apiUrl);
+            console.log('Session ID:', sessionId);
+
+            const response = await fetch(CONFIG.apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${CONFIG.token}`
+                },
+                body: JSON.stringify({
+                    content: {
+                        query: [
+                            {
+                                type: 'text',
+                                content: {
+                                    text: message
+                                }
+                            }
+                        ]
+                    },
+                    type: 'query',
+                    session_id: sessionId,
+                    project_id: CONFIG.projectId
+                })
+            });
+
+            hideTypingIndicator();
+            updateStatus('在线');
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API 错误:', response.status, errorText);
+                
+                let errorMsg = `请求失败: ${response.status}`;
+                if (response.status === 404) {
+                    errorMsg = '项目不存在，请检查配置';
+                } else if (response.status === 401) {
+                    errorMsg = '认证失败，请检查 Token';
+                } else if (response.status === 500) {
+                    errorMsg = '服务器内部错误，请稍后重试';
+                }
+                throw new Error(errorMsg);
+            }
+
+            // 处理响应
+            const contentType = response.headers.get('content-type');
+            console.log('响应类型:', contentType);
+
+            if (contentType && contentType.includes('text/event-stream')) {
+                // SSE 流式响应
+                await handleSSEStream(response);
+            } else {
+                // 普通 JSON 响应
+                const data = await response.json();
+                console.log('响应数据:', data);
+                
+                // 提取回复内容
+                let reply = '';
+                if (data.text) {
+                    reply = data.text;
+                } else if (data.content) {
+                    reply = data.content;
+                } else if (data.result) {
+                    reply = data.result;
+                } else if (typeof data === 'string') {
+                    reply = data;
+                } else {
+                    reply = JSON.stringify(data, null, 2);
+                }
+                
+                addMessage(reply || '抱歉，没有收到有效回复', 'assistant');
+            }
+        }
+
+        async function handleSSEStream(response) {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let assistantMessage = '';
+            let buffer = '';
+
+            addMessage('', 'assistant');
+            const lastMessage = document.querySelector('.message.assistant:last-child');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed) continue;
+
+                    // SSE 格式: data: {...}
+                    if (trimmed.startsWith('data:')) {
+                        const data = trimmed.slice(5).trim();
+                        if (data === '[DONE]') continue;
+
+                        try {
+                            const parsed = JSON.parse(data);
+                            // stream_run API 可能返回的格式
+                            let content = '';
+                            if (parsed.text) content = parsed.text;
+                            else if (parsed.content) content = parsed.content;
+                            else if (parsed.message) content = parsed.message;
+                            else if (parsed.response) content = parsed.response;
+                            
+                            if (content) {
+                                assistantMessage += content;
+                                lastMessage.textContent = assistantMessage;
+                                scrollToBottom();
+                            }
+                        } catch (e) {
+                            // 可能是纯文本
+                            if (data) {
+                                assistantMessage += data;
+                                lastMessage.textContent = assistantMessage;
+                                scrollToBottom();
+                            }
+                        }
+                    } 
+                    // JSON 格式
+                    else if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                        try {
+                            const parsed = JSON.parse(trimmed);
+                            let content = '';
+                            if (parsed.text) content = parsed.text;
+                            else if (parsed.content) content = parsed.content;
+                            else if (parsed.message) content = parsed.message;
+                            
+                            if (content) {
+                                assistantMessage += content;
+                                lastMessage.textContent = assistantMessage;
+                                scrollToBottom();
+                            }
+                        } catch (e) {
+                            // 不是 JSON，可能是纯文本
+                            assistantMessage += trimmed;
+                            lastMessage.textContent = assistantMessage;
+                            scrollToBottom();
+                        }
+                    }
+                    // 纯文本
+                    else {
+                        assistantMessage += trimmed;
+                        lastMessage.textContent = assistantMessage;
+                        scrollToBottom();
+                    }
+                }
+            }
+
+            // 确保消息被显示
+            if (!assistantMessage.trim()) {
+                lastMessage.textContent = '✓ 收到空响应';
+            }
+        }
+
+        function addMessage(text, type) {
+            const messages = document.getElementById('messages');
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.textContent = text;
+            messages.appendChild(div);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            const messages = document.getElementById('messages');
+            const div = document.createElement('div');
+            div.className = 'message assistant typing';
+            div.id = 'typing-indicator';
+            div.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+            messages.appendChild(div);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+        }
+
+        function scrollToBottom() {
+            const messages = document.getElementById('messages');
+            messages.scrollTop = messages.scrollHeight;
+        }
+    </script>
+</body>
+</html>
